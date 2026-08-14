@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build APK
 
 on:
   push:
@@ -6,126 +6,37 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   build:
-    name: Build Release APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.5"
           channel: stable
           cache: true
 
-      - name: Create clean Flutter project
-        shell: bash
-        run: |
-          set -e
-
-          rm -rf build_project
-
-          mkdir build_project
-
-          cd build_project
-
-          flutter create \
-            --platforms=android \
-            --project-name business_manager \
-            .
-
-          rm -rf test
-          rm -rf lib
-
-          mkdir -p lib
-
-          cp ../lib/main.dart lib/main.dart
-          cp ../lib/app.dart lib/app.dart
-          cp ../pubspec.yaml pubspec.yaml
-
-      - name: Verify project
-        working-directory: build_project
-        shell: bash
-        run: |
-          set -e
-
-          echo "Flutter version:"
-          flutter --version
-
-          echo ""
-          echo "Project files:"
-          ls -la
-
-          echo ""
-          echo "Checking test directory:"
-          if [ -d "test" ]; then
-            echo "ERROR: test directory still exists."
-            exit 1
-          else
-            echo "OK: test directory does not exist."
-          fi
-
-          echo ""
-          echo "Checking Dart files:"
-          ls -la lib
-
-          echo ""
-          echo "Checking package name:"
-          grep "^name:" pubspec.yaml
-
-      - name: Get dependencies
-        working-directory: build_project
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Remove generated tests
-        working-directory: build_project
-        run: rm -rf test
-
-      - name: Verify no tests exist
-        working-directory: build_project
-        shell: bash
-        run: |
-          if [ -d "test" ]; then
-            echo "ERROR: test directory exists."
-            find test -type f -maxdepth 3
-            exit 1
-          fi
-
-          echo "No test directory found."
-
-      - name: Analyze Flutter project
-        working-directory: build_project
+      - name: Analyze
         run: flutter analyze
 
-      - name: Build release APK
-        working-directory: build_project
+      - name: Build APK
         run: flutter build apk --release
-
-      - name: Verify APK
-        shell: bash
-        run: |
-          set -e
-
-          APK="build_project/build/app/outputs/flutter-apk/app-release.apk"
-
-          if [ ! -f "$APK" ]; then
-            echo "ERROR: APK was not created."
-            exit 1
-          fi
-
-          echo "APK successfully created:"
-          ls -lh "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: business-manager-apk
-          path: build_project/build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
+          path: build/app/outputs/flutter-apk/app-release.apk
