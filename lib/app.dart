@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -58,16 +59,29 @@ class AppData {
 
     if (raw == null) {
       return {
-        'orders': [],
-        'appointments': [],
-        'income': [],
-        'expenses': [],
-        'products': [],
-        'customers': [],
+        'orders': <dynamic>[],
+        'appointments': <dynamic>[],
+        'income': <dynamic>[],
+        'expenses': <dynamic>[],
+        'products': <dynamic>[],
+        'customers': <dynamic>[],
       };
     }
 
-    return jsonDecode(raw);
+    final decoded = jsonDecode(raw);
+
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+
+    return {
+      'orders': <dynamic>[],
+      'appointments': <dynamic>[],
+      'income': <dynamic>[],
+      'expenses': <dynamic>[],
+      'products': <dynamic>[],
+      'customers': <dynamic>[],
+    };
   }
 
   static Future<void> save(Map<String, dynamic> data) async {
@@ -102,17 +116,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _load() async {
     data = await AppData.load();
-    if (mounted) setState(() {});
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _save() async {
     await AppData.save(data);
-    if (mounted) setState(() {});
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
+    final pages = <Widget>[
       DashboardScreen(data: data),
       OrdersScreen(data: data, onChanged: _save),
       AppointmentsScreen(data: data, onChanged: _save),
@@ -132,7 +152,6 @@ class _HomeScreenState extends State<HomeScreen> {
           'Business Manager',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        centerTitle: false,
       ),
       drawer: NavigationDrawer(
         selectedIndex: index,
@@ -201,15 +220,23 @@ class _HomeScreenState extends State<HomeScreen> {
 class DashboardScreen extends StatelessWidget {
   final Map<String, dynamic> data;
 
-  const DashboardScreen({super.key, required this.data});
+  const DashboardScreen({
+    super.key,
+    required this.data,
+  });
 
   double _sum(String key) {
     final list = (data[key] as List?) ?? [];
 
     return list.fold<double>(
       0,
-      (sum, item) =>
-          sum + ((item['amount'] as num?)?.toDouble() ?? 0),
+      (sum, item) {
+        if (item is Map) {
+          return sum + ((item['amount'] as num?)?.toDouble() ?? 0);
+        }
+
+        return sum;
+      },
     );
   }
 
@@ -230,7 +257,8 @@ class DashboardScreen extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         GridView.count(
-          crossAxisCount: MediaQuery.of(context).size.width > 800 ? 4 : 2,
+          crossAxisCount:
+              MediaQuery.of(context).size.width > 800 ? 4 : 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 12,
@@ -253,7 +281,8 @@ class DashboardScreen extends StatelessWidget {
             ),
             StatCard(
               title: 'Orders',
-              value: ((data['orders'] as List?) ?? []).length.toDouble(),
+              value:
+                  ((data['orders'] as List?) ?? []).length.toDouble(),
               icon: Icons.shopping_bag,
               money: false,
             ),
@@ -271,12 +300,18 @@ class DashboardScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
-                _row('Appointments',
-                    ((data['appointments'] as List?) ?? []).length),
-                _row('Customers',
-                    ((data['customers'] as List?) ?? []).length),
-                _row('Products',
-                    ((data['products'] as List?) ?? []).length),
+                _row(
+                  'Appointments',
+                  ((data['appointments'] as List?) ?? []).length,
+                ),
+                _row(
+                  'Customers',
+                  ((data['customers'] as List?) ?? []).length,
+                ),
+                _row(
+                  'Products',
+                  ((data['products'] as List?) ?? []).length,
+                ),
               ],
             ),
           ),
@@ -326,10 +361,7 @@ class StatCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Icon(icon, size: 30),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(title),
             Text(
               money
                   ? value.toStringAsFixed(2)
@@ -347,7 +379,7 @@ class StatCard extends StatelessWidget {
 
 class OrdersScreen extends StatelessWidget {
   final Map<String, dynamic> data;
-  final VoidCallback onChanged;
+  final Future<void> Function() onChanged;
 
   const OrdersScreen({
     super.key,
@@ -369,19 +401,25 @@ class OrdersScreen extends StatelessWidget {
         final result = await showDataDialog(
           context,
           title: 'New Order',
-          fields: const ['Customer', 'Amount', 'Description'],
+          fields: const [
+            'Customer',
+            'Amount',
+            'Description',
+          ],
         );
 
-        if (result != null) {
-          orders.add({
-            'customer': result[0],
-            'amount': double.tryParse(result[1]) ?? 0,
-            'description': result[2],
-            'date': DateTime.now().toIso8601String(),
-          });
-
-          await onChanged();
+        if (result == null) {
+          return;
         }
+
+        orders.add({
+          'customer': result[0],
+          'amount': double.tryParse(result[1]) ?? 0,
+          'description': result[2],
+          'date': DateTime.now().toIso8601String(),
+        });
+
+        await onChanged();
       },
     );
   }
@@ -389,7 +427,7 @@ class OrdersScreen extends StatelessWidget {
 
 class AppointmentsScreen extends StatelessWidget {
   final Map<String, dynamic> data;
-  final VoidCallback onChanged;
+  final Future<void> Function() onChanged;
 
   const AppointmentsScreen({
     super.key,
@@ -411,18 +449,24 @@ class AppointmentsScreen extends StatelessWidget {
         final result = await showDataDialog(
           context,
           title: 'New Appointment',
-          fields: const ['Customer', 'Date & Time', 'Note'],
+          fields: const [
+            'Customer',
+            'Date & Time',
+            'Note',
+          ],
         );
 
-        if (result != null) {
-          appointments.add({
-            'customer': result[0],
-            'date': result[1],
-            'note': result[2],
-          });
-
-          await onChanged();
+        if (result == null) {
+          return;
         }
+
+        appointments.add({
+          'customer': result[0],
+          'date': result[1],
+          'note': result[2],
+        });
+
+        await onChanged();
       },
     );
   }
@@ -430,7 +474,7 @@ class AppointmentsScreen extends StatelessWidget {
 
 class FinanceScreen extends StatelessWidget {
   final Map<String, dynamic> data;
-  final VoidCallback onChanged;
+  final Future<void> Function() onChanged;
 
   const FinanceScreen({
     super.key,
@@ -468,47 +512,95 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _add(BuildContext context, String type) async {
+  Future<void> _add(
+    BuildContext context,
+    String type,
+  ) async {
     final result = await showDataDialog(
       context,
-      title: type == 'income' ? 'Add Income' : 'Add Expense',
-      fields: const ['Title', 'Amount'],
+      title: type == 'income'
+          ? 'Add Income'
+          : 'Add Expense',
+      fields: const [
+        'Title',
+        'Amount',
+      ],
     );
 
-    if (result != null) {
-      final list = (data[type] as List?) ?? [];
-      data[type] = list;
-
-      list.add({
-        'title': result[0],
-        'amount': double.tryParse(result[1]) ?? 0,
-        'date': DateTime.now().toIso8601String(),
-      });
-
-      await onChanged();
+    if (result == null) {
+      return;
     }
+
+    final list = (data[type] as List?) ?? [];
+
+    data[type] = list;
+
+    list.add({
+      'title': result[0],
+      'amount': double.tryParse(result[1]) ?? 0,
+      'date': DateTime.now().toIso8601String(),
+    });
+
+    await onChanged();
   }
 }
 
 class ReportsScreen extends StatelessWidget {
   final Map<String, dynamic> data;
 
-  const ReportsScreen({super.key, required this.data});
+  const ReportsScreen({
+    super.key,
+    required this.data,
+  });
 
-  double _sum(String key) {
+  double _periodSum(
+    String key,
+    DateTime now,
+    String period,
+  ) {
     final list = (data[key] as List?) ?? [];
 
     return list.fold<double>(
       0,
-      (sum, item) =>
-          sum + ((item['amount'] as num?)?.toDouble() ?? 0),
+      (sum, item) {
+        if (item is! Map) {
+          return sum;
+        }
+
+        final date = DateTime.tryParse(
+          item['date']?.toString() ?? '',
+        );
+
+        if (date == null) {
+          return sum;
+        }
+
+        bool match;
+
+        if (period == 'day') {
+          match = date.year == now.year &&
+              date.month == now.month &&
+              date.day == now.day;
+        } else if (period == 'month') {
+          match =
+              date.year == now.year && date.month == now.month;
+        } else {
+          match = date.year == now.year;
+        }
+
+        if (!match) {
+          return sum;
+        }
+
+        return sum +
+            ((item['amount'] as num?)?.toDouble() ?? 0);
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final income = _sum('income');
-    final expenses = _sum('expenses');
+    final now = DateTime.now();
 
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -521,53 +613,22 @@ class ReportsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         ReportCard(
-          title: 'All Time',
-          income: income,
-          expenses: expenses,
-        ),
-        ReportCard(
           title: 'Today',
-          income: _periodSum('income', DateTime.now(), 'day'),
-          expenses: _periodSum('expenses', DateTime.now(), 'day'),
+          income: _periodSum('income', now, 'day'),
+          expenses: _periodSum('expenses', now, 'day'),
         ),
         ReportCard(
           title: 'This Month',
-          income: _periodSum('income', DateTime.now(), 'month'),
-          expenses: _periodSum('expenses', DateTime.now(), 'month'),
+          income: _periodSum('income', now, 'month'),
+          expenses: _periodSum('expenses', now, 'month'),
         ),
         ReportCard(
           title: 'This Year',
-          income: _periodSum('income', DateTime.now(), 'year'),
-          expenses: _periodSum('expenses', DateTime.now(), 'year'),
+          income: _periodSum('income', now, 'year'),
+          expenses: _periodSum('expenses', now, 'year'),
         ),
       ],
     );
-  }
-
-  double _periodSum(String key, DateTime now, String period) {
-    final list = (data[key] as List?) ?? [];
-
-    return list.fold<double>(0, (sum, item) {
-      final date = DateTime.tryParse(item['date']?.toString() ?? '');
-
-      if (date == null) return sum;
-
-      bool match;
-
-      if (period == 'day') {
-        match = date.year == now.year &&
-            date.month == now.month &&
-            date.day == now.day;
-      } else if (period == 'month') {
-        match = date.year == now.year && date.month == now.month;
-      } else {
-        match = date.year == now.year;
-      }
-
-      return match
-          ? sum + ((item['amount'] as num?)?.toDouble() ?? 0)
-          : sum;
-    });
   }
 }
 
@@ -598,12 +659,18 @@ class ReportCard extends StatelessWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
-            Text('Income: ${income.toStringAsFixed(2)}'),
-            Text('Expenses: ${expenses.toStringAsFixed(2)}'),
+            Text(
+              'Income: ${income.toStringAsFixed(2)}',
+            ),
+            Text(
+              'Expenses: ${expenses.toStringAsFixed(2)}',
+            ),
             const Divider(),
             Text(
               'Profit: ${profit.toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -614,7 +681,7 @@ class ReportCard extends StatelessWidget {
 
 class ProductsScreen extends StatelessWidget {
   final Map<String, dynamic> data;
-  final VoidCallback onChanged;
+  final Future<void> Function() onChanged;
 
   const ProductsScreen({
     super.key,
@@ -636,18 +703,24 @@ class ProductsScreen extends StatelessWidget {
         final result = await showDataDialog(
           context,
           title: 'New Product',
-          fields: const ['Name', 'Price', 'Stock'],
+          fields: const [
+            'Name',
+            'Price',
+            'Stock',
+          ],
         );
 
-        if (result != null) {
-          products.add({
-            'name': result[0],
-            'amount': double.tryParse(result[1]) ?? 0,
-            'stock': int.tryParse(result[2]) ?? 0,
-          });
-
-          await onChanged();
+        if (result == null) {
+          return;
         }
+
+        products.add({
+          'name': result[0],
+          'amount': double.tryParse(result[1]) ?? 0,
+          'stock': int.tryParse(result[2]) ?? 0,
+        });
+
+        await onChanged();
       },
     );
   }
@@ -655,7 +728,7 @@ class ProductsScreen extends StatelessWidget {
 
 class CustomersScreen extends StatelessWidget {
   final Map<String, dynamic> data;
-  final VoidCallback onChanged;
+  final Future<void> Function() onChanged;
 
   const CustomersScreen({
     super.key,
@@ -677,18 +750,24 @@ class CustomersScreen extends StatelessWidget {
         final result = await showDataDialog(
           context,
           title: 'New Customer',
-          fields: const ['Name', 'Phone', 'Note'],
+          fields: const [
+            'Name',
+            'Phone',
+            'Note',
+          ],
         );
 
-        if (result != null) {
-          customers.add({
-            'name': result[0],
-            'phone': result[1],
-            'note': result[2],
-          });
-
-          await onChanged();
+        if (result == null) {
+          return;
         }
+
+        customers.add({
+          'name': result[0],
+          'phone': result[1],
+          'note': result[2],
+        });
+
+        await onChanged();
       },
     );
   }
@@ -720,7 +799,9 @@ class SettingsScreen extends StatelessWidget {
           child: ListTile(
             leading: const Icon(Icons.language),
             title: const Text('Language'),
-            subtitle: const Text('English'),
+            subtitle: const Text(
+              'English / Persian / French / German / Chinese',
+            ),
             onTap: () => _languageDialog(context),
           ),
         ),
@@ -729,10 +810,11 @@ class SettingsScreen extends StatelessWidget {
             leading: const Icon(Icons.dark_mode),
             title: const Text('Dark Mode'),
             onTap: () {
+              final isDark =
+                  Theme.of(context).brightness == Brightness.dark;
+
               onThemeChanged(
-                Theme.of(context).brightness == Brightness.dark
-                    ? ThemeMode.light
-                    : ThemeMode.dark,
+                isDark ? ThemeMode.light : ThemeMode.dark,
               );
             },
           ),
@@ -742,7 +824,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _languageDialog(BuildContext context) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (_) => SimpleDialog(
         title: const Text('Choose Language'),
@@ -778,7 +860,7 @@ class SimpleManagerPage extends StatelessWidget {
   final List items;
   final String emptyText;
   final String addLabel;
-  final VoidCallback onAdd;
+  final Future<void> Function() onAdd;
 
   const SimpleManagerPage({
     super.key,
@@ -796,14 +878,15 @@ class SimpleManagerPage extends StatelessWidget {
       body: items.isEmpty
           ? Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
                 children: [
                   Icon(icon, size: 64),
                   const SizedBox(height: 16),
                   Text(emptyText),
                   const SizedBox(height: 20),
                   FilledButton.icon(
-                    onPressed: onAdd,
+                    onPressed: () => onAdd(),
                     icon: const Icon(Icons.add),
                     label: Text(addLabel),
                   ),
@@ -815,6 +898,10 @@ class SimpleManagerPage extends StatelessWidget {
               itemCount: items.length,
               itemBuilder: (_, i) {
                 final item = items[i];
+
+                if (item is! Map) {
+                  return const SizedBox.shrink();
+                }
 
                 return Card(
                   child: ListTile(
@@ -833,7 +920,7 @@ class SimpleManagerPage extends StatelessWidget {
                     ),
                     trailing: item['amount'] != null
                         ? Text(
-                            (item['amount'] as num)
+                            ((item['amount'] as num?) ?? 0)
                                 .toStringAsFixed(2),
                           )
                         : null,
@@ -842,7 +929,7 @@ class SimpleManagerPage extends StatelessWidget {
               },
             ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: onAdd,
+        onPressed: () => onAdd(),
         icon: const Icon(Icons.add),
         label: Text(addLabel),
       ),
@@ -932,7 +1019,9 @@ class _DataDialogState extends State<_DataDialog> {
           onPressed: () {
             Navigator.pop(
               context,
-              controllers.map((e) => e.text.trim()).toList(),
+              controllers
+                  .map((controller) => controller.text.trim())
+                  .toList(),
             );
           },
           child: const Text('Save'),
