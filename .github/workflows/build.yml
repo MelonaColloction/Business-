@@ -20,27 +20,48 @@ jobs:
         with:
           flutter-version: '3.35.7'
           channel: stable
+          cache: true
 
       - name: Create Flutter project
         run: |
-          mkdir /tmp/flutter_app
+          mkdir -p /tmp/flutter_app
           cd /tmp/flutter_app
-          flutter create --platforms=android --org com.businessmanager business_manager
+
+          flutter create \
+            --platforms=android \
+            --org com.businessmanager \
+            business_manager
 
       - name: Copy application files
         run: |
-          cp lib/main.dart /tmp/flutter_app/business_manager/lib/main.dart
-          cp lib/app.dart /tmp/flutter_app/business_manager/lib/app.dart
+          cp lib/main.dart \
+            /tmp/flutter_app/business_manager/lib/main.dart
+
+          cp lib/app.dart \
+            /tmp/flutter_app/business_manager/lib/app.dart
 
           if [ -f pubspec.yaml ]; then
-            cp pubspec.yaml /tmp/flutter_app/business_manager/pubspec.yaml
+            cp pubspec.yaml \
+              /tmp/flutter_app/business_manager/pubspec.yaml
           fi
+
+      - name: Remove default tests
+        run: |
+          rm -rf /tmp/flutter_app/business_manager/test
+
+      - name: Get dependencies
+        working-directory: /tmp/flutter_app/business_manager
+        run: |
+          flutter pub get
+
+      - name: Analyze
+        working-directory: /tmp/flutter_app/business_manager
+        run: |
+          flutter analyze
 
       - name: Build APK
         working-directory: /tmp/flutter_app/business_manager
         run: |
-          flutter pub get
-          flutter analyze
           flutter build apk --release
 
       - name: Upload APK
@@ -48,3 +69,4 @@ jobs:
         with:
           name: Business-Manager-APK
           path: /tmp/flutter_app/business_manager/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
