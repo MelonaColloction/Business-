@@ -1,5 +1,7 @@
 name: business_manager
+
 description: Offline all-in-one business management app.
+
 publish_to: "none"
 
 version: 1.0.0+1
