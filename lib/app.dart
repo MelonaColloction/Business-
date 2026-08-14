@@ -3,162 +3,133 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum AppLanguage {
-  persian,
-  english,
-  french,
-  german,
-  chinese,
-}
-
 class BusinessManagerApp extends StatefulWidget {
   const BusinessManagerApp({super.key});
 
   @override
-  State<BusinessManagerApp> createState() =>
-      _BusinessManagerAppState();
+  State<BusinessManagerApp> createState() => _BusinessManagerAppState();
 }
 
 class _BusinessManagerAppState extends State<BusinessManagerApp> {
-  AppLanguage language = AppLanguage.persian;
-  ThemeMode themeMode = ThemeMode.light;
+  String languageCode = 'fa';
+  bool darkMode = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    loadSettings();
   }
 
-  Future<void> _loadSettings() async {
+  Future<void> loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-
-    final savedLanguage = prefs.getString('language');
-    final dark = prefs.getBool('dark_mode') ?? false;
 
     if (!mounted) return;
 
     setState(() {
-      language = _languageFromString(savedLanguage);
-      themeMode = dark ? ThemeMode.dark : ThemeMode.light;
+      languageCode = prefs.getString('language_code') ?? 'fa';
+      darkMode = prefs.getBool('dark_mode') ?? false;
     });
   }
 
-  Future<void> changeLanguage(AppLanguage value) async {
+  Future<void> setLanguage(String code) async {
     final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setString('language', value.name);
+    await prefs.setString('language_code', code);
 
     if (!mounted) return;
 
     setState(() {
-      language = value;
+      languageCode = code;
     });
   }
 
-  Future<void> changeTheme(bool dark) async {
+  Future<void> setDarkMode(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setBool('dark_mode', dark);
+    await prefs.setBool('dark_mode', value);
 
     if (!mounted) return;
 
     setState(() {
-      themeMode = dark ? ThemeMode.dark : ThemeMode.light;
+      darkMode = value;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final rtl = language == AppLanguage.persian;
+    final bool rtl = languageCode == 'fa';
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Business Manager',
-      themeMode: themeMode,
-      theme: _lightTheme(),
-      darkTheme: _darkTheme(),
+      theme: createLightTheme(),
+      darkTheme: createDarkTheme(),
+      themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,
       home: Directionality(
         textDirection:
             rtl ? TextDirection.rtl : TextDirection.ltr,
         child: HomeScreen(
-          language: language,
-          onLanguageChanged: changeLanguage,
-          onThemeChanged: changeTheme,
-        ),
-      ),
-    );
-  }
-
-  ThemeData _lightTheme() {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      colorSchemeSeed: const Color(0xFF6750A4),
-      scaffoldBackgroundColor: const Color(0xFFF7F7FA),
-      appBarTheme: const AppBarTheme(
-        centerTitle: false,
-        elevation: 0,
-      ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        margin: const EdgeInsets.only(bottom: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    );
-  }
-
-  ThemeData _darkTheme() {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      colorSchemeSeed: const Color(0xFF9A82DB),
-      scaffoldBackgroundColor: const Color(0xFF101014),
-      appBarTheme: const AppBarTheme(
-        elevation: 0,
-      ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        margin: const EdgeInsets.only(bottom: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
+          languageCode: languageCode,
+          darkMode: darkMode,
+          onLanguageChanged: setLanguage,
+          onDarkModeChanged: setDarkMode,
         ),
       ),
     );
   }
 }
 
-AppLanguage _languageFromString(String? value) {
-  for (final item in AppLanguage.values) {
-    if (item.name == value) {
-      return item;
-    }
-  }
-
-  return AppLanguage.persian;
+ThemeData createLightTheme() {
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.light,
+    colorSchemeSeed: const Color(0xFF6750A4),
+    scaffoldBackgroundColor: const Color(0xFFF7F7FA),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+    ),
+  );
 }
 
-class AppText {
-  final AppLanguage language;
+ThemeData createDarkTheme() {
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorSchemeSeed: const Color(0xFF9A82DB),
+    scaffoldBackgroundColor: const Color(0xFF101014),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+    ),
+  );
+}
 
-  const AppText(this.language);
+class AppStrings {
+  final String code;
 
-  String get dashboard => _text(
+  const AppStrings(this.code);
+
+  String get dashboard => tr(
+        code,
         'داشبورد',
         'Dashboard',
         'Tableau de bord',
@@ -166,7 +137,8 @@ class AppText {
         '仪表板',
       );
 
-  String get orders => _text(
+  String get orders => tr(
+        code,
         'سفارش‌ها',
         'Orders',
         'Commandes',
@@ -174,7 +146,8 @@ class AppText {
         '订单',
       );
 
-  String get appointments => _text(
+  String get appointments => tr(
+        code,
         'نوبت‌ها',
         'Appointments',
         'Rendez-vous',
@@ -182,7 +155,8 @@ class AppText {
         '预约',
       );
 
-  String get finance => _text(
+  String get finance => tr(
+        code,
         'مالی',
         'Finance',
         'Finance',
@@ -190,7 +164,8 @@ class AppText {
         '财务',
       );
 
-  String get products => _text(
+  String get products => tr(
+        code,
         'محصولات',
         'Products',
         'Produits',
@@ -198,7 +173,8 @@ class AppText {
         '产品',
       );
 
-  String get customers => _text(
+  String get customers => tr(
+        code,
         'مشتریان',
         'Customers',
         'Clients',
@@ -206,7 +182,8 @@ class AppText {
         '客户',
       );
 
-  String get reports => _text(
+  String get reports => tr(
+        code,
         'گزارش‌ها',
         'Reports',
         'Rapports',
@@ -214,7 +191,8 @@ class AppText {
         '报告',
       );
 
-  String get settings => _text(
+  String get settings => tr(
+        code,
         'تنظیمات',
         'Settings',
         'Paramètres',
@@ -222,7 +200,8 @@ class AppText {
         '设置',
       );
 
-  String get income => _text(
+  String get income => tr(
+        code,
         'درآمد',
         'Income',
         'Revenus',
@@ -230,15 +209,17 @@ class AppText {
         '收入',
       );
 
-  String get expenses => _text(
-        'هزینه',
+  String get expenses => tr(
+        code,
+        'هزینه‌ها',
         'Expenses',
         'Dépenses',
         'Ausgaben',
         '支出',
       );
 
-  String get profit => _text(
+  String get profit => tr(
+        code,
         'سود خالص',
         'Net Profit',
         'Bénéfice net',
@@ -246,47 +227,8 @@ class AppText {
         '净利润',
       );
 
-  String get quickActions => _text(
-        'دسترسی سریع',
-        'Quick Actions',
-        'Actions rapides',
-        'Schnellaktionen',
-        '快速操作',
-      );
-
-  String get businessSummary => _text(
-        'خلاصه کسب‌وکار',
-        'Business Summary',
-        'Résumé de l’entreprise',
-        'Geschäftsübersicht',
-        '业务概览',
-      );
-
-  String get add => _text(
-        'افزودن',
-        'Add',
-        'Ajouter',
-        'Hinzufügen',
-        '添加',
-      );
-
-  String get save => _text(
-        'ذخیره',
-        'Save',
-        'Enregistrer',
-        'Speichern',
-        '保存',
-      );
-
-  String get cancel => _text(
-        'لغو',
-        'Cancel',
-        'Annuler',
-        'Abbrechen',
-        '取消',
-      );
-
-  String get language => _text(
+  String get language => tr(
+        code,
         'زبان',
         'Language',
         'Langue',
@@ -294,7 +236,8 @@ class AppText {
         '语言',
       );
 
-  String get darkMode => _text(
+  String get darkMode => tr(
+        code,
         'حالت تاریک',
         'Dark Mode',
         'Mode sombre',
@@ -302,33 +245,63 @@ class AppText {
         '深色模式',
       );
 
-  String get noData => _text(
+  String get add => tr(
+        code,
+        'افزودن',
+        'Add',
+        'Ajouter',
+        'Hinzufügen',
+        '添加',
+      );
+
+  String get save => tr(
+        code,
+        'ذخیره',
+        'Save',
+        'Enregistrer',
+        'Speichern',
+        '保存',
+      );
+
+  String get cancel => tr(
+        code,
+        'لغو',
+        'Cancel',
+        'Annuler',
+        'Abbrechen',
+        '取消',
+      );
+
+  String get noData => tr(
+        code,
         'اطلاعاتی وجود ندارد',
         'No data available',
         'Aucune donnée',
         'Keine Daten',
         '暂无数据',
       );
+}
 
-  String _text(
-    String fa,
-    String en,
-    String fr,
-    String de,
-    String zh,
-  ) {
-    switch (language) {
-      case AppLanguage.persian:
-        return fa;
-      case AppLanguage.english:
-        return en;
-      case AppLanguage.french:
-        return fr;
-      case AppLanguage.german:
-        return de;
-      case AppLanguage.chinese:
-        return zh;
-    }
+String tr(
+  String code,
+  String fa,
+  String en,
+  String fr,
+  String de,
+  String zh,
+) {
+  switch (code) {
+    case 'en':
+      return en;
+    case 'fr':
+      return fr;
+    case 'de':
+      return de;
+    case 'zh':
+      return zh;
+    case 'fa':
+    default:
+      return fa;
   }
 }
 
@@ -341,13 +314,18 @@ class BusinessData {
   List<CustomerModel> customers;
 
   BusinessData({
-    this.orders = const [],
-    this.appointments = const [],
-    this.incomes = const [],
-    this.expenses = const [],
-    this.products = const [],
-    this.customers = const [],
-  });
+    List<OrderModel>? orders,
+    List<AppointmentModel>? appointments,
+    List<FinanceModel>? incomes,
+    List<FinanceModel>? expenses,
+    List<ProductModel>? products,
+    List<CustomerModel>? customers,
+  })  : orders = orders ?? [],
+        appointments = appointments ?? [],
+        incomes = incomes ?? [],
+        expenses = expenses ?? [],
+        products = products ?? [],
+        customers = customers ?? [];
 
   double get totalIncome {
     return incomes.fold(
@@ -372,9 +350,12 @@ class BusinessData {
       'orders': orders.map((e) => e.toJson()).toList(),
       'appointments':
           appointments.map((e) => e.toJson()).toList(),
-      'incomes': incomes.map((e) => e.toJson()).toList(),
-      'expenses': expenses.map((e) => e.toJson()).toList(),
-      'products': products.map((e) => e.toJson()).toList(),
+      'incomes':
+          incomes.map((e) => e.toJson()).toList(),
+      'expenses':
+          expenses.map((e) => e.toJson()).toList(),
+      'products':
+          products.map((e) => e.toJson()).toList(),
       'customers':
           customers.map((e) => e.toJson()).toList(),
     };
@@ -384,27 +365,27 @@ class BusinessData {
     Map<String, dynamic> json,
   ) {
     return BusinessData(
-      orders: _parseList(
+      orders: parseList<OrderModel>(
         json['orders'],
         OrderModel.fromJson,
       ),
-      appointments: _parseList(
+      appointments: parseList<AppointmentModel>(
         json['appointments'],
         AppointmentModel.fromJson,
       ),
-      incomes: _parseList(
+      incomes: parseList<FinanceModel>(
         json['incomes'],
         FinanceModel.fromJson,
       ),
-      expenses: _parseList(
+      expenses: parseList<FinanceModel>(
         json['expenses'],
         FinanceModel.fromJson,
       ),
-      products: _parseList(
+      products: parseList<ProductModel>(
         json['products'],
         ProductModel.fromJson,
       ),
-      customers: _parseList(
+      customers: parseList<CustomerModel>(
         json['customers'],
         CustomerModel.fromJson,
       ),
@@ -412,11 +393,13 @@ class BusinessData {
   }
 }
 
-List<T> _parseList<T>(
+List<T> parseList<T>(
   dynamic value,
   T Function(Map<String, dynamic>) parser,
 ) {
-  if (value is! List) return [];
+  if (value is! List) {
+    return <T>[];
+  }
 
   return value
       .whereType<Map>()
@@ -460,7 +443,8 @@ class OrderModel {
       id: json['id'] ?? '',
       customer: json['customer'] ?? '',
       description: json['description'] ?? '',
-      amount: (json['amount'] as num?)?.toDouble() ?? 0,
+      amount:
+          (json['amount'] as num?)?.toDouble() ?? 0,
       date: DateTime.tryParse(
             json['date'] ?? '',
           ) ??
@@ -534,7 +518,8 @@ class FinanceModel {
     return FinanceModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
-      amount: (json['amount'] as num?)?.toDouble() ?? 0,
+      amount:
+          (json['amount'] as num?)?.toDouble() ?? 0,
       date: DateTime.tryParse(
             json['date'] ?? '',
           ) ??
@@ -571,8 +556,10 @@ class ProductModel {
     return ProductModel(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
-      price: (json['price'] as num?)?.toDouble() ?? 0,
-      stock: (json['stock'] as num?)?.toInt() ?? 0,
+      price:
+          (json['price'] as num?)?.toDouble() ?? 0,
+      stock:
+          (json['stock'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -612,15 +599,17 @@ class CustomerModel {
 }
 
 class HomeScreen extends StatefulWidget {
-  final AppLanguage language;
-  final ValueChanged<AppLanguage> onLanguageChanged;
-  final ValueChanged<bool> onThemeChanged;
+  final String languageCode;
+  final bool darkMode;
+  final ValueChanged<String> onLanguageChanged;
+  final ValueChanged<bool> onDarkModeChanged;
 
   const HomeScreen({
     super.key,
-    required this.language,
+    required this.languageCode,
+    required this.darkMode,
     required this.onLanguageChanged,
-    required this.onThemeChanged,
+    required this.onDarkModeChanged,
   });
 
   @override
@@ -636,12 +625,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    loadBusinessData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> loadBusinessData() async {
     final prefs = await SharedPreferences.getInstance();
-
     final raw = prefs.getString('business_data');
 
     if (raw != null) {
@@ -649,7 +637,8 @@ class _HomeScreenState extends State<HomeScreen> {
         final decoded =
             jsonDecode(raw) as Map<String, dynamic>;
 
-        final loaded = BusinessData.fromJson(decoded);
+        final loaded =
+            BusinessData.fromJson(decoded);
 
         data.orders = loaded.orders;
         data.appointments = loaded.appointments;
@@ -667,7 +656,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> saveData() async {
+  Future<void> saveBusinessData() async {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setString(
@@ -682,7 +671,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final text = AppText(widget.language);
+    final strings = AppStrings(widget.languageCode);
 
     if (loading) {
       return const Scaffold(
@@ -692,45 +681,60 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final pages = <Widget>[
-      DashboardPage(data: data),
+    final pages = [
+      DashboardPage(
+        data: data,
+        strings: strings,
+      ),
       OrdersPage(
         data: data,
-        onSave: saveData,
+        onSave: saveBusinessData,
+        strings: strings,
       ),
       AppointmentsPage(
         data: data,
-        onSave: saveData,
+        onSave: saveBusinessData,
+        strings: strings,
       ),
       FinancePage(
         data: data,
-        onSave: saveData,
+        onSave: saveBusinessData,
+        strings: strings,
       ),
       ProductsPage(
         data: data,
-        onSave: saveData,
+        onSave: saveBusinessData,
+        strings: strings,
       ),
       CustomersPage(
         data: data,
-        onSave: saveData,
+        onSave: saveBusinessData,
+        strings: strings,
       ),
-      ReportsPage(data: data),
+      ReportsPage(
+        data: data,
+        strings: strings,
+      ),
       SettingsPage(
-        language: widget.language,
-        onLanguageChanged: widget.onLanguageChanged,
-        onThemeChanged: widget.onThemeChanged,
+        languageCode: widget.languageCode,
+        darkMode: widget.darkMode,
+        onLanguageChanged:
+            widget.onLanguageChanged,
+        onDarkModeChanged:
+            widget.onDarkModeChanged,
+        strings: strings,
       ),
     ];
 
     final labels = [
-      text.dashboard,
-      text.orders,
-      text.appointments,
-      text.finance,
-      text.products,
-      text.customers,
-      text.reports,
-      text.settings,
+      strings.dashboard,
+      strings.orders,
+      strings.appointments,
+      strings.finance,
+      strings.products,
+      strings.customers,
+      strings.reports,
+      strings.settings,
     ];
 
     final icons = [
@@ -765,9 +769,8 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const SizedBox(height: 24),
           const Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 28,
-            ),
+            padding:
+                EdgeInsets.symmetric(horizontal: 28),
             child: Text(
               'Business Manager',
               style: TextStyle(
@@ -786,7 +789,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: pages[selectedIndex],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex > 3 ? 0 : selectedIndex,
+        selectedIndex:
+            selectedIndex > 3 ? 0 : selectedIndex,
         onDestinationSelected: (index) {
           setState(() {
             selectedIndex = index;
@@ -817,10 +821,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class DashboardPage extends StatelessWidget {
   final BusinessData data;
+  final AppStrings strings;
 
   const DashboardPage({
     super.key,
     required this.data,
+    required this.strings,
   });
 
   @override
@@ -828,16 +834,12 @@ class DashboardPage extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(18),
       children: [
-        const Text(
-          'خلاصه کسب‌وکار',
-          style: TextStyle(
-            fontSize: 25,
+        Text(
+          strings.dashboard,
+          style: const TextStyle(
+            fontSize: 26,
             fontWeight: FontWeight.bold,
           ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'مدیریت کسب‌وکار به صورت آفلاین',
         ),
         const SizedBox(height: 20),
         GridView.count(
@@ -846,70 +848,33 @@ class DashboardPage extends StatelessWidget {
                   ? 4
                   : 2,
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+          physics:
+              const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           childAspectRatio: 1.25,
           children: [
             StatCard(
-              title: 'درآمد',
+              title: strings.income,
               value: money(data.totalIncome),
               icon: Icons.trending_up,
             ),
             StatCard(
-              title: 'هزینه',
+              title: strings.expenses,
               value: money(data.totalExpenses),
               icon: Icons.trending_down,
             ),
             StatCard(
-              title: 'سود خالص',
+              title: strings.profit,
               value: money(data.profit),
               icon: Icons.account_balance,
             ),
             StatCard(
-              title: 'سفارش‌ها',
+              title: strings.orders,
               value: data.orders.length.toString(),
               icon: Icons.receipt_long,
             ),
           ],
-        ),
-        const SizedBox(height: 18),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'آمار کلی',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                InfoRow(
-                  icon: Icons.calendar_month,
-                  title: 'نوبت‌ها',
-                  value:
-                      data.appointments.length.toString(),
-                ),
-                InfoRow(
-                  icon: Icons.people,
-                  title: 'مشتریان',
-                  value:
-                      data.customers.length.toString(),
-                ),
-                InfoRow(
-                  icon: Icons.inventory_2,
-                  title: 'محصولات',
-                  value:
-                      data.products.length.toString(),
-                ),
-              ],
-            ),
-          ),
         ),
       ],
     );
@@ -919,18 +884,20 @@ class DashboardPage extends StatelessWidget {
 class OrdersPage extends StatelessWidget {
   final BusinessData data;
   final Future<void> Function() onSave;
+  final AppStrings strings;
 
   const OrdersPage({
     super.key,
     required this.data,
     required this.onSave,
+    required this.strings,
   });
 
   @override
   Widget build(BuildContext context) {
     return DataListPage(
-      title: 'سفارش‌ها',
-      emptyText: 'هنوز سفارشی ثبت نشده است.',
+      title: strings.orders,
+      emptyText: strings.noData,
       icon: Icons.receipt_long,
       items: [
         for (final order in data.orders)
@@ -943,7 +910,7 @@ class OrdersPage extends StatelessWidget {
       onAdd: () async {
         final result = await formDialog(
           context,
-          'ثبت سفارش',
+          strings.add,
           [
             'نام مشتری',
             'توضیحات',
@@ -958,7 +925,8 @@ class OrdersPage extends StatelessWidget {
             id: generateId(),
             customer: result[0],
             description: result[1],
-            amount: double.tryParse(result[2]) ?? 0,
+            amount:
+                double.tryParse(result[2]) ?? 0,
             date: DateTime.now(),
           ),
         );
@@ -972,31 +940,34 @@ class OrdersPage extends StatelessWidget {
 class AppointmentsPage extends StatelessWidget {
   final BusinessData data;
   final Future<void> Function() onSave;
+  final AppStrings strings;
 
   const AppointmentsPage({
     super.key,
     required this.data,
     required this.onSave,
+    required this.strings,
   });
 
   @override
   Widget build(BuildContext context) {
     return DataListPage(
-      title: 'نوبت‌ها',
-      emptyText: 'هنوز نوبتی ثبت نشده است.',
+      title: strings.appointments,
+      emptyText: strings.noData,
       icon: Icons.calendar_month,
       items: [
         for (final appointment in data.appointments)
           ListItemData(
             title: appointment.customer,
             subtitle: appointment.description,
-            trailing: formatDate(appointment.date),
+            trailing:
+                formatDate(appointment.date),
           ),
       ],
       onAdd: () async {
         final result = await formDialog(
           context,
-          'ثبت نوبت',
+          strings.add,
           [
             'نام مشتری',
             'توضیحات',
@@ -1023,11 +994,13 @@ class AppointmentsPage extends StatelessWidget {
 class FinancePage extends StatelessWidget {
   final BusinessData data;
   final Future<void> Function() onSave;
+  final AppStrings strings;
 
   const FinancePage({
     super.key,
     required this.data,
     required this.onSave,
+    required this.strings,
   });
 
   @override
@@ -1036,37 +1009,33 @@ class FinancePage extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: [
         StatCard(
-          title: 'درآمد کل',
+          title: strings.income,
           value: money(data.totalIncome),
-          icon: Icons.arrow_upward,
+          icon: Icons.trending_up,
         ),
         StatCard(
-          title: 'هزینه کل',
+          title: strings.expenses,
           value: money(data.totalExpenses),
-          icon: Icons.arrow_downward,
+          icon: Icons.trending_down,
         ),
         StatCard(
-          title: 'سود خالص',
+          title: strings.profit,
           value: money(data.profit),
-          icon: Icons.account_balance_wallet,
+          icon: Icons.account_balance,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         FilledButton.icon(
-          onPressed: () => addFinance(
-            context,
-            true,
-          ),
+          onPressed: () =>
+              addFinance(context, true),
           icon: const Icon(Icons.add),
-          label: const Text('ثبت درآمد'),
+          label: Text(strings.income),
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
-          onPressed: () => addFinance(
-            context,
-            false,
-          ),
+          onPressed: () =>
+              addFinance(context, false),
           icon: const Icon(Icons.remove),
-          label: const Text('ثبت هزینه'),
+          label: Text(strings.expenses),
         ),
       ],
     );
@@ -1078,7 +1047,7 @@ class FinancePage extends StatelessWidget {
   ) async {
     final result = await formDialog(
       context,
-      income ? 'ثبت درآمد' : 'ثبت هزینه',
+      income ? strings.income : strings.expenses,
       [
         'عنوان',
         'مبلغ',
@@ -1087,17 +1056,18 @@ class FinancePage extends StatelessWidget {
 
     if (result == null) return;
 
-    final finance = FinanceModel(
+    final item = FinanceModel(
       id: generateId(),
       title: result[0],
-      amount: double.tryParse(result[1]) ?? 0,
+      amount:
+          double.tryParse(result[1]) ?? 0,
       date: DateTime.now(),
     );
 
     if (income) {
-      data.incomes.add(finance);
+      data.incomes.add(item);
     } else {
-      data.expenses.add(finance);
+      data.expenses.add(item);
     }
 
     await onSave();
@@ -1107,18 +1077,20 @@ class FinancePage extends StatelessWidget {
 class ProductsPage extends StatelessWidget {
   final BusinessData data;
   final Future<void> Function() onSave;
+  final AppStrings strings;
 
   const ProductsPage({
     super.key,
     required this.data,
     required this.onSave,
+    required this.strings,
   });
 
   @override
   Widget build(BuildContext context) {
     return DataListPage(
-      title: 'محصولات',
-      emptyText: 'محصولی ثبت نشده است.',
+      title: strings.products,
+      emptyText: strings.noData,
       icon: Icons.inventory_2,
       items: [
         for (final product in data.products)
@@ -1132,7 +1104,7 @@ class ProductsPage extends StatelessWidget {
       onAdd: () async {
         final result = await formDialog(
           context,
-          'افزودن محصول',
+          strings.add,
           [
             'نام محصول',
             'قیمت',
@@ -1146,8 +1118,10 @@ class ProductsPage extends StatelessWidget {
           ProductModel(
             id: generateId(),
             name: result[0],
-            price: double.tryParse(result[1]) ?? 0,
-            stock: int.tryParse(result[2]) ?? 0,
+            price:
+                double.tryParse(result[1]) ?? 0,
+            stock:
+                int.tryParse(result[2]) ?? 0,
           ),
         );
 
@@ -1160,18 +1134,20 @@ class ProductsPage extends StatelessWidget {
 class CustomersPage extends StatelessWidget {
   final BusinessData data;
   final Future<void> Function() onSave;
+  final AppStrings strings;
 
   const CustomersPage({
     super.key,
     required this.data,
     required this.onSave,
+    required this.strings,
   });
 
   @override
   Widget build(BuildContext context) {
     return DataListPage(
-      title: 'مشتریان',
-      emptyText: 'هنوز مشتری ثبت نشده است.',
+      title: strings.customers,
+      emptyText: strings.noData,
       icon: Icons.people,
       items: [
         for (final customer in data.customers)
@@ -1184,7 +1160,7 @@ class CustomersPage extends StatelessWidget {
       onAdd: () async {
         final result = await formDialog(
           context,
-          'افزودن مشتری',
+          strings.add,
           [
             'نام',
             'شماره تماس',
@@ -1211,48 +1187,41 @@ class CustomersPage extends StatelessWidget {
 
 class ReportsPage extends StatelessWidget {
   final BusinessData data;
+  final AppStrings strings;
 
   const ReportsPage({
     super.key,
     required this.data,
+    required this.strings,
   });
 
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
 
-    final todayIncome =
-        periodTotal(data.incomes, now, 0);
-    final todayExpense =
-        periodTotal(data.expenses, now, 0);
-
-    final monthIncome =
-        periodTotal(data.incomes, now, 1);
-    final monthExpense =
-        periodTotal(data.expenses, now, 1);
-
-    final yearIncome =
-        periodTotal(data.incomes, now, 2);
-    final yearExpense =
-        periodTotal(data.expenses, now, 2);
-
     return ListView(
       padding: const EdgeInsets.all(18),
       children: [
         ReportCard(
           title: 'امروز',
-          income: todayIncome,
-          expenses: todayExpense,
+          income:
+              periodTotal(data.incomes, now, 0),
+          expenses:
+              periodTotal(data.expenses, now, 0),
         ),
         ReportCard(
           title: 'این ماه',
-          income: monthIncome,
-          expenses: monthExpense,
+          income:
+              periodTotal(data.incomes, now, 1),
+          expenses:
+              periodTotal(data.expenses, now, 1),
         ),
         ReportCard(
           title: 'امسال',
-          income: yearIncome,
-          expenses: yearExpense,
+          income:
+              periodTotal(data.incomes, now, 2),
+          expenses:
+              periodTotal(data.expenses, now, 2),
         ),
         ReportCard(
           title: 'کل',
@@ -1265,15 +1234,19 @@ class ReportsPage extends StatelessWidget {
 }
 
 class SettingsPage extends StatelessWidget {
-  final AppLanguage language;
-  final ValueChanged<AppLanguage> onLanguageChanged;
-  final ValueChanged<bool> onThemeChanged;
+  final String languageCode;
+  final bool darkMode;
+  final ValueChanged<String> onLanguageChanged;
+  final ValueChanged<bool> onDarkModeChanged;
+  final AppStrings strings;
 
   const SettingsPage({
     super.key,
-    required this.language,
+    required this.languageCode,
+    required this.darkMode,
     required this.onLanguageChanged,
-    required this.onThemeChanged,
+    required this.onDarkModeChanged,
+    required this.strings,
   });
 
   @override
@@ -1283,25 +1256,33 @@ class SettingsPage extends StatelessWidget {
       children: [
         Card(
           child: ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('زبان برنامه'),
-            subtitle: Text(languageName(language)),
+            leading:
+                const Icon(Icons.language),
+            title: Text(strings.language),
+            subtitle:
+                Text(languageName(languageCode)),
             onTap: () {
               showDialog<void>(
                 context: context,
-                builder: (dialogContext) {
+                builder: (context) {
                   return SimpleDialog(
-                    title: const Text('انتخاب زبان'),
+                    title:
+                        Text(strings.language),
                     children: [
-                      for (final item in AppLanguage.values)
+                      for (final code in [
+                        'fa',
+                        'en',
+                        'fr',
+                        'de',
+                        'zh',
+                      ])
                         SimpleDialogOption(
                           onPressed: () {
-                            onLanguageChanged(item);
-                            Navigator.pop(dialogContext);
+                            onLanguageChanged(code);
+                            Navigator.pop(context);
                           },
-                          child: Text(
-                            languageName(item),
-                          ),
+                          child:
+                              Text(languageName(code)),
                         ),
                     ],
                   );
@@ -1312,12 +1293,11 @@ class SettingsPage extends StatelessWidget {
         ),
         Card(
           child: SwitchListTile(
-            secondary: const Icon(Icons.dark_mode),
-            title: const Text('حالت تاریک'),
-            value:
-                Theme.of(context).brightness ==
-                    Brightness.dark,
-            onChanged: onThemeChanged,
+            secondary:
+                const Icon(Icons.dark_mode),
+            title: Text(strings.darkMode),
+            value: darkMode,
+            onChanged: onDarkModeChanged,
           ),
         ),
       ],
@@ -1345,31 +1325,20 @@ class DataListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (items.isEmpty) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 70,
-              ),
-              const SizedBox(height: 18),
-              Text(
-                emptyText,
-                style: const TextStyle(
-                  fontSize: 17,
-                ),
-              ),
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add),
-                label: const Text('افزودن'),
-              ),
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 70),
+            const SizedBox(height: 15),
+            Text(emptyText),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('افزودن'),
+            ),
+          ],
         ),
       );
     }
@@ -1378,14 +1347,15 @@ class DataListPage extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: [
         Align(
-          alignment: AlignmentDirectional.centerStart,
+          alignment:
+              AlignmentDirectional.centerStart,
           child: FilledButton.icon(
             onPressed: onAdd,
             icon: const Icon(Icons.add),
-            label: Text('افزودن $title'),
+            label: Text(title),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 15),
         for (final item in items)
           Card(
             child: ListTile(
@@ -1394,14 +1364,17 @@ class DataListPage extends StatelessWidget {
               ),
               title: Text(item.title),
               subtitle: Text(item.subtitle),
-              trailing: item.trailing.isEmpty
-                  ? null
-                  : Text(
-                      item.trailing,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+              trailing:
+                  item.trailing.isEmpty
+                      ? null
+                      : Text(
+                          item.trailing,
+                          style:
+                              const TextStyle(
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
+                        ),
             ),
           ),
       ],
@@ -1449,9 +1422,62 @@ class StatCard extends StatelessWidget {
             Text(
               value,
               style: const TextStyle(
-                fontSize: 21,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ReportCard extends StatelessWidget {
+  final String title;
+  final double income;
+  final double expenses;
+
+  const ReportCard({
+    super.key,
+    required this.title,
+    required this.income,
+    required this.expenses,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 14),
+            InfoRow(
+              icon: Icons.arrow_upward,
+              title: 'درآمد',
+              value: money(income),
+            ),
+            InfoRow(
+              icon: Icons.arrow_downward,
+              title: 'هزینه',
+              value: money(expenses),
+            ),
+            const Divider(),
+            InfoRow(
+              icon: Icons.account_balance,
+              title: 'سود خالص',
+              value:
+                  money(income - expenses),
             ),
           ],
         ),
@@ -1475,14 +1501,13 @@ class InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
+      padding:
+          const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Icon(icon),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(title),
-          ),
+          Expanded(child: Text(title)),
           Text(
             value,
             style: const TextStyle(
@@ -1495,86 +1520,43 @@ class InfoRow extends StatelessWidget {
   }
 }
 
-class ReportCard extends StatelessWidget {
-  final String title;
-  final double income;
-  final double expenses;
-
-  const ReportCard({
-    super.key,
-    required this.title,
-    required this.income,
-    required this.expenses,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final profitValue = income - expenses;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 15),
-            InfoRow(
-              icon: Icons.arrow_upward,
-              title: 'درآمد',
-              value: money(income),
-            ),
-            InfoRow(
-              icon: Icons.arrow_downward,
-              title: 'هزینه',
-              value: money(expenses),
-            ),
-            const Divider(),
-            InfoRow(
-              icon: Icons.account_balance,
-              title: 'سود خالص',
-              value: money(profitValue),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 Future<List<String>?> formDialog(
   BuildContext context,
   String title,
   List<String> fields,
 ) async {
-  final controllers = <TextEditingController>[
-    for (int i = 0; i < fields.length; i++)
-      TextEditingController(),
-  ];
+  final controllers =
+      <TextEditingController>[];
 
-  final result = await showDialog<List<String>>(
+  for (int i = 0; i < fields.length; i++) {
+    controllers.add(
+      TextEditingController(),
+    );
+  }
+
+  final result =
+      await showDialog<List<String>>(
     context: context,
-    builder: (dialogContext) {
+    builder: (context) {
       return AlertDialog(
         title: Text(title),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (int i = 0; i < fields.length; i++)
+              for (int i = 0;
+                  i < fields.length;
+                  i++)
                 Padding(
                   padding:
-                      const EdgeInsets.only(bottom: 12),
+                      const EdgeInsets.only(
+                    bottom: 12,
+                  ),
                   child: TextField(
-                    controller: controllers[i],
-                    decoration: InputDecoration(
+                    controller:
+                        controllers[i],
+                    decoration:
+                        InputDecoration(
                       labelText: fields[i],
                     ),
                   ),
@@ -1585,18 +1567,21 @@ Future<List<String>?> formDialog(
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(dialogContext);
+              Navigator.pop(context);
             },
             child: const Text('لغو'),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(
-                dialogContext,
-                [
-                  for (final controller in controllers)
-                    controller.text.trim(),
-                ],
+                context,
+                controllers
+                    .map(
+                      (controller) =>
+                          controller.text
+                              .trim(),
+                    )
+                    .toList(),
               );
             },
             child: const Text('ذخیره'),
@@ -1621,22 +1606,23 @@ double periodTotal(
   double total = 0;
 
   for (final item in list) {
-    bool match;
+    bool matches = false;
 
     if (type == 0) {
-      match =
+      matches =
           item.date.year == now.year &&
           item.date.month == now.month &&
           item.date.day == now.day;
     } else if (type == 1) {
-      match =
+      matches =
           item.date.year == now.year &&
           item.date.month == now.month;
-    } else {
-      match = item.date.year == now.year;
+    } else if (type == 2) {
+      matches =
+          item.date.year == now.year;
     }
 
-    if (match) {
+    if (matches) {
       total += item.amount;
     }
   }
@@ -1667,17 +1653,18 @@ String formatDate(DateTime date) {
   return '$day/$month $hour:$minute';
 }
 
-String languageName(AppLanguage language) {
-  switch (language) {
-    case AppLanguage.persian:
-      return 'فارسی';
-    case AppLanguage.english:
+String languageName(String code) {
+  switch (code) {
+    case 'en':
       return 'English';
-    case AppLanguage.french:
+    case 'fr':
       return 'Français';
-    case AppLanguage.german:
+    case 'de':
       return 'Deutsch';
-    case AppLanguage.chinese:
+    case 'zh':
       return '中文';
+    case 'fa':
+    default:
+      return 'فارسی';
   }
 }
