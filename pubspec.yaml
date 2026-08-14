@@ -1,6 +1,6 @@
 name: business_manager
 
-description: Professional offline business management app.
+description: Offline business management application.
 
 publish_to: "none"
 
@@ -12,13 +12,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^4.0.0
 
 flutter:
