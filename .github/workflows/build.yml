@@ -2,12 +2,14 @@ name: Build Android APK
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,13 +21,16 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Get dependencies
+      - name: Create Android project
+        run: flutter create --platforms=android .
+
+      - name: Install dependencies
         run: flutter pub get
 
       - name: Analyze
         run: flutter analyze
 
-      - name: Build APK
+      - name: Build release APK
         run: flutter build apk --release
 
       - name: Upload APK
