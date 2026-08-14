@@ -7,7 +7,8 @@ class BusinessManagerApp extends StatefulWidget {
   const BusinessManagerApp({super.key});
 
   @override
-  State<BusinessManagerApp> createState() => _BusinessManagerAppState();
+  State<BusinessManagerApp> createState() =>
+      _BusinessManagerAppState();
 }
 
 class _BusinessManagerAppState extends State<BusinessManagerApp> {
@@ -17,10 +18,10 @@ class _BusinessManagerAppState extends State<BusinessManagerApp> {
   @override
   void initState() {
     super.initState();
-    loadSettings();
+    _loadSettings();
   }
 
-  Future<void> loadSettings() async {
+  Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
 
     if (!mounted) return;
@@ -31,7 +32,7 @@ class _BusinessManagerAppState extends State<BusinessManagerApp> {
     });
   }
 
-  Future<void> setLanguage(String code) async {
+  Future<void> _setLanguage(String code) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', code);
 
@@ -42,7 +43,7 @@ class _BusinessManagerAppState extends State<BusinessManagerApp> {
     });
   }
 
-  Future<void> setDarkMode(bool value) async {
+  Future<void> _setDarkMode(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('dark_mode', value);
 
@@ -55,13 +56,13 @@ class _BusinessManagerAppState extends State<BusinessManagerApp> {
 
   @override
   Widget build(BuildContext context) {
-    final bool rtl = languageCode == 'fa';
+    final rtl = languageCode == 'fa';
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Business Manager',
-      theme: createLightTheme(),
-      darkTheme: createDarkTheme(),
+      theme: lightTheme(),
+      darkTheme: darkTheme(),
       themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,
       home: Directionality(
         textDirection:
@@ -69,15 +70,15 @@ class _BusinessManagerAppState extends State<BusinessManagerApp> {
         child: HomeScreen(
           languageCode: languageCode,
           darkMode: darkMode,
-          onLanguageChanged: setLanguage,
-          onDarkModeChanged: setDarkMode,
+          onLanguageChanged: _setLanguage,
+          onDarkModeChanged: _setDarkMode,
         ),
       ),
     );
   }
 }
 
-ThemeData createLightTheme() {
+ThemeData lightTheme() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
@@ -100,7 +101,7 @@ ThemeData createLightTheme() {
   );
 }
 
-ThemeData createDarkTheme() {
+ThemeData darkTheme() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
@@ -272,6 +273,24 @@ class AppStrings {
         '取消',
       );
 
+  String get delete => tr(
+        code,
+        'حذف',
+        'Delete',
+        'Supprimer',
+        'Löschen',
+        '删除',
+      );
+
+  String get confirmDelete => tr(
+        code,
+        'آیا مطمئن هستید که می‌خواهید این مورد را حذف کنید؟',
+        'Are you sure you want to delete this item?',
+        'Voulez-vous vraiment supprimer cet élément ?',
+        'Möchten Sie diesen Eintrag wirklich löschen?',
+        '确定要删除此项目吗？',
+      );
+
   String get noData => tr(
         code,
         'اطلاعاتی وجود ندارد',
@@ -279,6 +298,114 @@ class AppStrings {
         'Aucune donnée',
         'Keine Daten',
         '暂无数据',
+      );
+
+  String get name => tr(
+        code,
+        'نام',
+        'Name',
+        'Nom',
+        'Name',
+        '名称',
+      );
+
+  String get customerName => tr(
+        code,
+        'نام مشتری',
+        'Customer name',
+        'Nom du client',
+        'Kundenname',
+        '客户姓名',
+      );
+
+  String get description => tr(
+        code,
+        'توضیحات',
+        'Description',
+        'Description',
+        'Beschreibung',
+        '描述',
+      );
+
+  String get amount => tr(
+        code,
+        'مبلغ',
+        'Amount',
+        'Montant',
+        'Betrag',
+        '金额',
+      );
+
+  String get price => tr(
+        code,
+        'قیمت',
+        'Price',
+        'Prix',
+        'Preis',
+        '价格',
+      );
+
+  String get stock => tr(
+        code,
+        'موجودی',
+        'Stock',
+        'Stock',
+        'Bestand',
+        '库存',
+      );
+
+  String get phone => tr(
+        code,
+        'شماره تماس',
+        'Phone',
+        'Téléphone',
+        'Telefon',
+        '电话',
+      );
+
+  String get note => tr(
+        code,
+        'یادداشت',
+        'Note',
+        'Note',
+        'Notiz',
+        '备注',
+      );
+
+  String get today => tr(
+        code,
+        'امروز',
+        'Today',
+        "Aujourd'hui",
+        'Heute',
+        '今天',
+      );
+
+  String get thisMonth => tr(
+        code,
+        'این ماه',
+        'This month',
+        'Ce mois',
+        'Diesen Monat',
+        '本月',
+      );
+
+  String get thisYear => tr(
+        code,
+        'امسال',
+        'This year',
+        'Cette année',
+        'Dieses Jahr',
+        '今年',
+      );
+
+  String get all => tr(
+        code,
+        'کل',
+        'All time',
+        'Total',
+        'Gesamt',
+        '全部',
       );
 }
 
@@ -625,10 +752,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    loadBusinessData();
+    _loadBusinessData();
   }
 
-  Future<void> loadBusinessData() async {
+  Future<void> _loadBusinessData() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString('business_data');
 
@@ -656,7 +783,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> saveBusinessData() async {
+  Future<void> _saveBusinessData() async {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setString(
@@ -688,27 +815,27 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       OrdersPage(
         data: data,
-        onSave: saveBusinessData,
+        onSave: _saveBusinessData,
         strings: strings,
       ),
       AppointmentsPage(
         data: data,
-        onSave: saveBusinessData,
+        onSave: _saveBusinessData,
         strings: strings,
       ),
       FinancePage(
         data: data,
-        onSave: saveBusinessData,
+        onSave: _saveBusinessData,
         strings: strings,
       ),
       ProductsPage(
         data: data,
-        onSave: saveBusinessData,
+        onSave: _saveBusinessData,
         strings: strings,
       ),
       CustomersPage(
         data: data,
-        onSave: saveBusinessData,
+        onSave: _saveBusinessData,
         strings: strings,
       ),
       ReportsPage(
@@ -902,6 +1029,7 @@ class OrdersPage extends StatelessWidget {
       items: [
         for (final order in data.orders)
           ListItemData(
+            id: order.id,
             title: order.customer,
             subtitle: order.description,
             trailing: money(order.amount),
@@ -912,15 +1040,16 @@ class OrdersPage extends StatelessWidget {
           context,
           strings.add,
           [
-            'نام مشتری',
-            'توضیحات',
-            'مبلغ',
+            strings.customerName,
+            strings.description,
+            strings.amount,
           ],
         );
 
         if (result == null) return;
 
-        data.orders.add(
+        data.orders.insert(
+          0,
           OrderModel(
             id: generateId(),
             customer: result[0],
@@ -931,6 +1060,12 @@ class OrdersPage extends StatelessWidget {
           ),
         );
 
+        await onSave();
+      },
+      onDelete: (id) async {
+        data.orders.removeWhere(
+          (item) => item.id == id,
+        );
         await onSave();
       },
     );
@@ -958,6 +1093,7 @@ class AppointmentsPage extends StatelessWidget {
       items: [
         for (final appointment in data.appointments)
           ListItemData(
+            id: appointment.id,
             title: appointment.customer,
             subtitle: appointment.description,
             trailing:
@@ -969,14 +1105,15 @@ class AppointmentsPage extends StatelessWidget {
           context,
           strings.add,
           [
-            'نام مشتری',
-            'توضیحات',
+            strings.customerName,
+            strings.description,
           ],
         );
 
         if (result == null) return;
 
-        data.appointments.add(
+        data.appointments.insert(
+          0,
           AppointmentModel(
             id: generateId(),
             customer: result[0],
@@ -985,6 +1122,12 @@ class AppointmentsPage extends StatelessWidget {
           ),
         );
 
+        await onSave();
+      },
+      onDelete: (id) async {
+        data.appointments.removeWhere(
+          (item) => item.id == id,
+        );
         await onSave();
       },
     );
@@ -1005,6 +1148,25 @@ class FinancePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final entries = [
+      ...data.incomes.map(
+        (item) => FinanceListItem(
+          id: item.id,
+          title: item.title,
+          amount: item.amount,
+          income: true,
+        ),
+      ),
+      ...data.expenses.map(
+        (item) => FinanceListItem(
+          id: item.id,
+          title: item.title,
+          amount: item.amount,
+          income: false,
+        ),
+      ),
+    ];
+
     return ListView(
       padding: const EdgeInsets.all(18),
       children: [
@@ -1023,20 +1185,68 @@ class FinancePage extends StatelessWidget {
           value: money(data.profit),
           icon: Icons.account_balance,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         FilledButton.icon(
-          onPressed: () =>
-              addFinance(context, true),
+          onPressed: () => addFinance(
+            context,
+            true,
+          ),
           icon: const Icon(Icons.add),
           label: Text(strings.income),
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
-          onPressed: () =>
-              addFinance(context, false),
+          onPressed: () => addFinance(
+            context,
+            false,
+          ),
           icon: const Icon(Icons.remove),
           label: Text(strings.expenses),
         ),
+        const SizedBox(height: 20),
+        for (final entry in entries)
+          Dismissible(
+            key: ValueKey(entry.id),
+            direction:
+                DismissDirection.endToStart,
+            confirmDismiss: (_) =>
+                confirmDelete(
+              context,
+              strings,
+            ),
+            onDismissed: (_) async {
+              if (entry.income) {
+                data.incomes.removeWhere(
+                  (item) => item.id == entry.id,
+                );
+              } else {
+                data.expenses.removeWhere(
+                  (item) => item.id == entry.id,
+                );
+              }
+
+              await onSave();
+            },
+            background: deleteBackground(),
+            child: Card(
+              child: ListTile(
+                leading: CircleAvatar(
+                  child: Icon(
+                    entry.income
+                        ? Icons.arrow_upward
+                        : Icons.arrow_downward,
+                  ),
+                ),
+                title: Text(entry.title),
+                trailing: Text(
+                  money(entry.amount),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -1049,8 +1259,8 @@ class FinancePage extends StatelessWidget {
       context,
       income ? strings.income : strings.expenses,
       [
-        'عنوان',
-        'مبلغ',
+        strings.name,
+        strings.amount,
       ],
     );
 
@@ -1065,9 +1275,9 @@ class FinancePage extends StatelessWidget {
     );
 
     if (income) {
-      data.incomes.add(item);
+      data.incomes.insert(0, item);
     } else {
-      data.expenses.add(item);
+      data.expenses.insert(0, item);
     }
 
     await onSave();
@@ -1095,9 +1305,10 @@ class ProductsPage extends StatelessWidget {
       items: [
         for (final product in data.products)
           ListItemData(
+            id: product.id,
             title: product.name,
             subtitle:
-                'موجودی: ${product.stock}',
+                '${strings.stock}: ${product.stock}',
             trailing: money(product.price),
           ),
       ],
@@ -1106,15 +1317,16 @@ class ProductsPage extends StatelessWidget {
           context,
           strings.add,
           [
-            'نام محصول',
-            'قیمت',
-            'موجودی',
+            strings.name,
+            strings.price,
+            strings.stock,
           ],
         );
 
         if (result == null) return;
 
-        data.products.add(
+        data.products.insert(
+          0,
           ProductModel(
             id: generateId(),
             name: result[0],
@@ -1125,6 +1337,12 @@ class ProductsPage extends StatelessWidget {
           ),
         );
 
+        await onSave();
+      },
+      onDelete: (id) async {
+        data.products.removeWhere(
+          (item) => item.id == id,
+        );
         await onSave();
       },
     );
@@ -1152,6 +1370,7 @@ class CustomersPage extends StatelessWidget {
       items: [
         for (final customer in data.customers)
           ListItemData(
+            id: customer.id,
             title: customer.name,
             subtitle: customer.phone,
             trailing: '',
@@ -1162,15 +1381,16 @@ class CustomersPage extends StatelessWidget {
           context,
           strings.add,
           [
-            'نام',
-            'شماره تماس',
-            'یادداشت',
+            strings.name,
+            strings.phone,
+            strings.note,
           ],
         );
 
         if (result == null) return;
 
-        data.customers.add(
+        data.customers.insert(
+          0,
           CustomerModel(
             id: generateId(),
             name: result[0],
@@ -1179,6 +1399,12 @@ class CustomersPage extends StatelessWidget {
           ),
         );
 
+        await onSave();
+      },
+      onDelete: (id) async {
+        data.customers.removeWhere(
+          (item) => item.id == id,
+        );
         await onSave();
       },
     );
@@ -1203,28 +1429,28 @@ class ReportsPage extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: [
         ReportCard(
-          title: 'امروز',
+          title: strings.today,
           income:
               periodTotal(data.incomes, now, 0),
           expenses:
               periodTotal(data.expenses, now, 0),
         ),
         ReportCard(
-          title: 'این ماه',
+          title: strings.thisMonth,
           income:
               periodTotal(data.incomes, now, 1),
           expenses:
               periodTotal(data.expenses, now, 1),
         ),
         ReportCard(
-          title: 'امسال',
+          title: strings.thisYear,
           income:
               periodTotal(data.incomes, now, 2),
           expenses:
               periodTotal(data.expenses, now, 2),
         ),
         ReportCard(
-          title: 'کل',
+          title: strings.all,
           income: data.totalIncome,
           expenses: data.totalExpenses,
         ),
@@ -1311,6 +1537,7 @@ class DataListPage extends StatelessWidget {
   final IconData icon;
   final List<ListItemData> items;
   final Future<void> Function() onAdd;
+  final Future<void> Function(String id) onDelete;
 
   const DataListPage({
     super.key,
@@ -1319,6 +1546,7 @@ class DataListPage extends StatelessWidget {
     required this.icon,
     required this.items,
     required this.onAdd,
+    required this.onDelete,
   });
 
   @override
@@ -1336,61 +1564,116 @@ class DataListPage extends StatelessWidget {
             FilledButton.icon(
               onPressed: onAdd,
               icon: const Icon(Icons.add),
-              label: const Text('افزودن'),
+              label: Text(title),
             ),
           ],
         ),
       );
     }
 
-    return ListView(
+    return ListView.builder(
       padding: const EdgeInsets.all(18),
-      children: [
-        Align(
-          alignment:
-              AlignmentDirectional.centerStart,
-          child: FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: Text(title),
-          ),
-        ),
-        const SizedBox(height: 15),
-        for (final item in items)
-          Card(
+      itemCount: items.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Padding(
+            padding:
+                const EdgeInsets.only(bottom: 15),
+            child: Align(
+              alignment:
+                  AlignmentDirectional.centerStart,
+              child: FilledButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add),
+                label: Text(title),
+              ),
+            ),
+          );
+        }
+
+        final item = items[index - 1];
+
+        return Dismissible(
+          key: ValueKey(item.id),
+          direction:
+              DismissDirection.endToStart,
+          confirmDismiss: (_) =>
+              confirmDelete(context, null),
+          onDismissed: (_) {
+            onDelete(item.id);
+          },
+          background: deleteBackground(),
+          child: Card(
             child: ListTile(
               leading: CircleAvatar(
                 child: Icon(icon),
               ),
               title: Text(item.title),
               subtitle: Text(item.subtitle),
-              trailing:
-                  item.trailing.isEmpty
-                      ? null
-                      : Text(
-                          item.trailing,
-                          style:
-                              const TextStyle(
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (item.trailing.isNotEmpty)
+                    Text(
+                      item.trailing,
+                      style: const TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                  IconButton(
+                    tooltip: 'حذف',
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                    ),
+                    onPressed: () async {
+                      final confirmed =
+                          await confirmDelete(
+                        context,
+                        null,
+                      );
+
+                      if (confirmed) {
+                        await onDelete(item.id);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
-      ],
+        );
+      },
     );
   }
 }
 
 class ListItemData {
+  final String id;
   final String title;
   final String subtitle;
   final String trailing;
 
   const ListItemData({
+    required this.id,
     required this.title,
     required this.subtitle,
     required this.trailing,
+  });
+}
+
+class FinanceListItem {
+  final String id;
+  final String title;
+  final double amount;
+  final bool income;
+
+  const FinanceListItem({
+    required this.id,
+    required this.title,
+    required this.amount,
+    required this.income,
   });
 }
 
@@ -1520,6 +1803,59 @@ class InfoRow extends StatelessWidget {
   }
 }
 
+Future<bool> confirmDelete(
+  BuildContext context,
+  AppStrings? strings,
+) async {
+  final title = strings?.delete ?? 'حذف اطلاعات';
+  final message = strings?.confirmDelete ??
+      'آیا مطمئن هستید که می‌خواهید این مورد را حذف کنید؟';
+  final cancel = strings?.cancel ?? 'لغو';
+  final delete = strings?.delete ?? 'حذف';
+
+  return await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: Text(cancel),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                child: Text(delete),
+              ),
+            ],
+          );
+        },
+      ) ??
+      false;
+}
+
+Widget deleteBackground() {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    alignment: Alignment.centerRight,
+    padding:
+        const EdgeInsets.symmetric(horizontal: 24),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(20),
+      color: Colors.red,
+    ),
+    child: const Icon(
+      Icons.delete,
+      color: Colors.white,
+    ),
+  );
+}
+
 Future<List<String>?> formDialog(
   BuildContext context,
   String title,
@@ -1529,9 +1865,7 @@ Future<List<String>?> formDialog(
       <TextEditingController>[];
 
   for (int i = 0; i < fields.length; i++) {
-    controllers.add(
-      TextEditingController(),
-    );
+    controllers.add(TextEditingController());
   }
 
   final result =
@@ -1578,8 +1912,7 @@ Future<List<String>?> formDialog(
                 controllers
                     .map(
                       (controller) =>
-                          controller.text
-                              .trim(),
+                          controller.text.trim(),
                     )
                     .toList(),
               );
